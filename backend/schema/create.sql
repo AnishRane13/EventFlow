@@ -19,7 +19,7 @@ CREATE TABLE events (
     venue VARCHAR(255),
     date DATE NOT NULL,
     time TIME NOT NULL,
-    banner_url BYTEA,
+    banner_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

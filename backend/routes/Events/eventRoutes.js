@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs");
 const router = express.Router();
 const multer = require("multer");
 const fs = require("fs");
+const AWS = require('aws-sdk');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 
 
 // Get all events
@@ -49,12 +52,19 @@ router.get("/:event_id", async (req, res) => {
   });
   
 
+  // Configure AWS
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION
+  });
 
-// Set up multer to handle file uploads
-const storage = multer.memoryStorage(); // Store files in memory as buffer
+  
+// Set up multer for temporary storage
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (req, file, cb) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
     if (!allowedTypes.includes(file.mimetype)) {
@@ -65,22 +75,31 @@ const upload = multer({
 });
 
 
-// Create new event
+// Function to upload to S3
+const uploadToS3 = async (file) => {
+    const fileExtension = file.mimetype.split('/')[1];
+    const fileName = `${uuidv4()}.${fileExtension}`;
+  
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: `event-banners/${fileName}`,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read'
+    };
+  
+    const result = await s3.upload(params).promise();
+    return result.Location; // Returns the public URL of the uploaded file
+  };
+
+// Modified route handler
 router.post("/", upload.single("banner"), async (req, res) => {
     try {
       const { organizer_id, name, description, venue, date, time } = req.body;
       const bannerFile = req.file;
   
       // Validation
-      if (
-        !organizer_id ||
-        !name ||
-        !description ||
-        !venue ||
-        !date ||
-        !time ||
-        !bannerFile
-      ) {
+      if (!organizer_id || !name || !description || !venue || !date || !time || !bannerFile) {
         return res.status(400).json({ error: "All fields are required, including banner image" });
       }
   
@@ -90,9 +109,10 @@ router.post("/", upload.single("banner"), async (req, res) => {
         return res.status(400).json({ error: "Invalid date format" });
       }
   
-      // Save banner as a buffer to the database
-      const bannerBuffer = bannerFile.buffer;
+      // Upload image to S3 and get URL
+      const bannerUrl = await uploadToS3(bannerFile);
   
+      // Save event with banner URL instead of buffer
       const newEvent = await createEvent(
         organizer_id,
         name,
@@ -100,19 +120,18 @@ router.post("/", upload.single("banner"), async (req, res) => {
         venue,
         date,
         time,
-        bannerBuffer // Save image as BYTEA in the database
+        bannerUrl // Store URL instead of buffer
       );
   
       res.status(201).json(newEvent);
     } catch (err) {
       console.error(err.message);
       if (err.code === "23505") {
-        // Unique violation
         res.status(409).json({ error: "Event already exists" });
       } else {
         res.status(500).json({ error: "Internal Server Error" });
       }
     }
   });
-
+  
 module.exports = router;
