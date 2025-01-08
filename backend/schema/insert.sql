@@ -1,96 +1,71 @@
--- Insert Users
+-- Insert sample users (organizers and attendees)
 INSERT INTO users (name, email, password_hash, phone_number, role) VALUES
-('John Doe', 'john@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyBAQ/fzL.St.q', '+1234567890', 'organizer'),
-('Jane Smith', 'jane@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyBAQ/fzL.St.q', '+1234567891', 'attendee'),
-('Mike Johnson', 'mike@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyBAQ/fzL.St.q', '+1234567892', 'attendee');
+('John Doe', 'john.doe@email.com', 'hashed_password_1', '+1234567890', 'organizer'),
+('Jane Smith', 'jane.smith@email.com', 'hashed_password_2', '+1234567891', 'organizer'),
+('Bob Wilson', 'bob.wilson@email.com', 'hashed_password_3', '+1234567892', 'attendee'),
+('Alice Brown', 'alice.brown@email.com', 'hashed_password_4', '+1234567893', 'attendee');
 
-DO $$ 
-DECLARE
-    v_organizer_id UUID;
-    v_attendee1_id UUID;
-    v_attendee2_id UUID;
-    v_event1_id UUID;
-    v_event2_id UUID;
-    v_ticket1_id UUID;
-    v_ticket2_id UUID;
-    v_question_id UUID;
-    v_poll_id UUID;
-    v_option1_id UUID;
-    v_option2_id UUID;
-BEGIN
-    -- Get inserted user IDs
-    SELECT user_id INTO v_organizer_id FROM users WHERE email = 'john@example.com';
-    SELECT user_id INTO v_attendee1_id FROM users WHERE email = 'jane@example.com';
-    SELECT user_id INTO v_attendee2_id FROM users WHERE email = 'mike@example.com';
+-- Insert sample events
+INSERT INTO events (organizer_id, name, description, venue, date, time) VALUES
+(1, 'Tech Conference 2025', 'Annual technology conference', 'Convention Center', '2025-03-15', '09:00:00'),
+(2, 'Music Festival', 'Summer music festival', 'Central Park', '2025-07-20', '14:00:00');
 
-    -- Insert Events
-    INSERT INTO events (organizer_id, name, description, venue, date, time) VALUES
-    (v_organizer_id, 'Tech Conference 2025', 'Annual Technology Conference', 'Convention Center', '2025-03-15', '09:00:00')
-    RETURNING event_id INTO v_event1_id;
-    
-    INSERT INTO events (organizer_id, name, description, venue, date, time) VALUES
-    (v_organizer_id, 'Digital Summit', 'Digital Marketing Summit', 'Hotel Grand', '2025-04-20', '10:00:00')
-    RETURNING event_id INTO v_event2_id;
+-- Insert ticket types for events
+INSERT INTO tickets (event_id, type, price, quantity_available) VALUES
+(1, 'Early Bird', 99.99, 100),
+(1, 'VIP', 299.99, 50),
+(1, 'General', 149.99, 200),
+(2, 'Early Bird', 79.99, 150),
+(2, 'VIP', 199.99, 75),
+(2, 'General', 129.99, 300);
 
-    -- Insert Tickets
-    INSERT INTO tickets (event_id, type, price, quantity_available) VALUES
-    (v_event1_id, 'Early Bird', 99.99, 100)
-    RETURNING ticket_id INTO v_ticket1_id;
-    
-    INSERT INTO tickets (event_id, type, price, quantity_available) VALUES
-    (v_event1_id, 'VIP', 199.99, 50)
-    RETURNING ticket_id INTO v_ticket2_id;
+-- Insert sample ticket purchases
+INSERT INTO ticket_purchases (user_id, ticket_id, quantity, total_price, qr_code, payment_status) VALUES
+(3, 1, 2, 199.98, 'QR_CODE_HASH_1', 'Completed'),
+(4, 2, 1, 299.99, 'QR_CODE_HASH_2', 'Completed');
 
-    -- Insert Ticket Purchases
-    INSERT INTO ticket_purchases (user_id, ticket_id, quantity, total_price, qr_code, payment_status) VALUES
-    (v_attendee1_id, v_ticket1_id, 2, 199.98, 'QR_CODE_1', 'Completed'),
-    (v_attendee2_id, v_ticket2_id, 1, 199.99, 'QR_CODE_2', 'Pending');
+-- Insert discount codes
+INSERT INTO discount_codes (event_id, code, discount_percentage, max_uses, valid_until) VALUES
+(1, 'EARLY25', 25.00, 50, '2025-02-28'),
+(2, 'SUMMER20', 20.00, 100, '2025-06-30');
 
-    -- Insert Discount Codes
-    INSERT INTO discount_codes (event_id, code, discount_percentage, max_uses, uses, valid_until) VALUES
-    (v_event1_id, 'EARLY25', 25.00, 100, 0, '2025-03-01'),
-    (v_event2_id, 'VIP50', 50.00, 50, 0, '2025-04-01');
+-- Insert event attendees
+INSERT INTO event_attendees (event_id, user_id, checked_in) VALUES
+(1, 3, false),
+(1, 4, false);
 
-    -- Insert Feedback
-    INSERT INTO feedback (user_id, event_id, rating, comments) VALUES
-    (v_attendee1_id, v_event1_id, 5, 'Excellent event!'),
-    (v_attendee2_id, v_event1_id, 4, 'Great speakers and content');
+-- Insert feedback for past events
+INSERT INTO feedback (user_id, event_id, rating, comments) VALUES
+(3, 1, 5, 'Excellent event! Very well organized.'),
+(4, 1, 4, 'Great speakers and networking opportunities.');
 
-    -- Insert Event Attendees
-    INSERT INTO event_attendees (event_id, user_id, checked_in) VALUES
-    (v_event1_id, v_attendee1_id, true),
-    (v_event1_id, v_attendee2_id, false);
+-- Insert live polls
+INSERT INTO live_polls (event_id, question, is_active) VALUES
+(1, 'What topic would you like to explore next?', true);
 
-    -- Insert Live Q&A
-    INSERT INTO live_qa (event_id, user_id, content, is_approved) VALUES
-    (v_event1_id, v_attendee1_id, 'What are your thoughts on AI?', true)
-    RETURNING qa_id INTO v_question_id;
+-- Insert live poll options
+INSERT INTO live_poll_options (poll_id, option_text) VALUES
+(1, 'Artificial Intelligence'),
+(1, 'Blockchain'),
+(1, 'Cloud Computing'),
+(1, 'Cybersecurity');
 
-    -- Insert Live Q&A Answers
-    INSERT INTO live_qa_answers (qa_id, user_id, content) VALUES
-    (v_question_id, v_organizer_id, 'AI is transforming every industry.');
+-- Insert live poll votes
+INSERT INTO live_poll_votes (poll_id, option_id, user_id) VALUES
+(1, 1, 3),
+(1, 2, 4);
 
-    -- Insert Live Q&A Votes
-    INSERT INTO live_qa_votes (qa_id, user_id) VALUES
-    (v_question_id, v_attendee2_id);
+-- Insert live Q&A questions
+INSERT INTO live_qa (event_id, user_id, content, is_approved) VALUES
+(1, 3, 'What are your thoughts on the future of remote work?', true),
+(1, 4, 'How do you see AI impacting job markets in the next 5 years?', true);
 
-    -- Insert Live Polls
-    INSERT INTO live_polls (event_id, question) VALUES
-    (v_event1_id, 'Which topic interests you the most?')
-    RETURNING poll_id INTO v_poll_id;
+-- Insert live Q&A answers
+INSERT INTO live_qa_answers (qa_id, user_id, content) VALUES
+(1, 1, 'Remote work will continue to evolve with better collaboration tools.'),
+(2, 2, 'AI will create new job opportunities while automating routine tasks.');
 
-    -- Insert Live Poll Options
-    INSERT INTO live_poll_options (poll_id, option_text) VALUES
-    (v_poll_id, 'Artificial Intelligence')
-    RETURNING option_id INTO v_option1_id;
-
-    INSERT INTO live_poll_options (poll_id, option_text) VALUES
-    (v_poll_id, 'Blockchain Technology')
-    RETURNING option_id INTO v_option2_id;
-
-    -- Insert Live Poll Votes
-    INSERT INTO live_poll_votes (poll_id, option_id, user_id) VALUES
-    (v_poll_id, v_option1_id, v_attendee1_id),
-    (v_poll_id, v_option2_id, v_attendee2_id);
-
-END $$;
+-- Insert live Q&A votes
+INSERT INTO live_qa_votes (qa_id, user_id) VALUES
+(1, 4),
+(2, 3);
