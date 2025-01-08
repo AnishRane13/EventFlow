@@ -1,0 +1,19 @@
+-- Drop Live Polls and Q&A Tables
+DROP TABLE IF EXISTS live_poll_votes CASCADE;
+DROP TABLE IF EXISTS live_poll_options CASCADE;
+DROP TABLE IF EXISTS live_polls CASCADE;
+DROP TABLE IF EXISTS live_qa_votes CASCADE;
+DROP TABLE IF EXISTS live_qa_answers CASCADE;
+DROP TABLE IF EXISTS live_qa CASCADE;
+
+-- Drop Main Tables
+DROP TABLE IF EXISTS event_attendees CASCADE;
+DROP TABLE IF EXISTS feedback CASCADE;
+DROP TABLE IF EXISTS discount_codes CASCADE;
+DROP TABLE IF EXISTS ticket_purchases CASCADE;
+DROP TABLE IF EXISTS tickets CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Ensure `pgcrypto` extension remains
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
