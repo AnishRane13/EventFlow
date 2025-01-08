@@ -1,6 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/User/userRoutes");
 
 // Load environment variables
 dotenv.config();
@@ -13,6 +13,7 @@ app.use(express.json());
 
 // User Routes
 app.use("/api/users", userRoutes);
+// app.use("/api/users", userRoutes);
 
 // Start the server
 app.listen(PORT, () => {
