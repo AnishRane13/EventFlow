@@ -1,11 +1,13 @@
 import './App.css'
-import CreateEventForm from './CreateEventForm'
+import SignUp from './pages/SignUp'
+// import Login from './pages/Login'
 
 function App() {
 
   return (
     <>
-      <CreateEventForm/>
+      <SignUp/>
+      {/* <Login/> */}
     </>
   )
 }
